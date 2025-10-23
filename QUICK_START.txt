@@ -1,0 +1,177 @@
+═══════════════════════════════════════════════════════════
+  БЫСТРЫЙ СТАРТ - Настройка Zabbix для работы графиков
+═══════════════════════════════════════════════════════════
+
+Все сервисы уже запущены! Осталось только настроить в веб-интерфейсе.
+
+ШАГИ ДЛЯ НАЧАЛА РАБОТЫ:
+=======================
+
+1️⃣  ЗАЙДИТЕ В ZABBIX WEB UI
+   
+   Откройте: http://localhost
+   
+   Логин: Admin
+   Пароль: zabbix
+
+
+2️⃣  ДОБАВЬТЕ ХОС ДЛЯ МОНИТОРИНГА
+
+   a) В меню перейдите:
+      Data collection → Hosts → Create host
+   
+   b) Заполните форму:
+      
+      ┌─────────────────────────────────────────────┐
+      │ Host name: ubuntu25                         │
+      │ (должно совпадать с ZBX_HOSTNAME)          │
+      │                                             │
+      │ Templates:                                  │
+      │   Нажмите "Select" и выберите:             │
+      │   → Linux by Zabbix agent                  │
+      │                                             │
+      │ Host groups:                                │
+      │   Выберите: Linux servers                  │
+      │   (или создайте свою группу)               │
+      │                                             │
+      │ Interfaces:                                 │
+      │   Нажмите "Add" → Agent                    │
+      │   DNS name: zabbix-agent2                  │
+      │   Connect to: DNS                          │
+      │   Port: 10050                              │
+      └─────────────────────────────────────────────┘
+   
+   c) Нажмите "Add" внизу страницы
+
+
+3️⃣  ПРОВЕРЬТЕ ПОДКЛЮЧЕНИЕ
+
+   Data collection → Hosts → найдите "ubuntu25"
+   
+   В колонке "Availability" должна появиться:
+   ✅ Зеленая иконка "ZBX" (через 1-2 минуты)
+   
+   Если красная - подождите еще минуту.
+   Если так и не стала зеленой - смотрите раздел "Проблемы" ниже.
+
+
+4️⃣  ПРОВЕРЬТЕ СБОР ДАННЫХ
+
+   Monitoring → Hosts → нажмите на "ubuntu25" → Latest data
+   
+   Через 1-2 минуты должны появиться данные:
+   • CPU utilization
+   • Memory utilization  
+   • Available memory
+   • Free disk space
+   • System load
+   • Network traffic
+
+
+5️⃣  СМОТРИТЕ ГРАФИКИ
+
+   Способ 1 - Встроенные графики:
+   Monitoring → Hosts → ubuntu25 → Graphs
+   
+   Способ 2 - Графики метрик:
+   Monitoring → Latest data → ubuntu25 → 
+   Нажмите на иконку графика рядом с любой метрикой
+
+
+6️⃣  НАСТРОЙКА GRAFANA (ОПЦИОНАЛЬНО)
+
+   a) Откройте: http://localhost:3000
+      Логин: aDm1N
+      Пароль: r4FD6GEH7zsXfXZs
+   
+   b) Установите плагин Zabbix:
+      - В терминале выполните:
+        docker exec -it grafana grafana-cli plugins install alexanderzobnin-zabbix-app
+        docker restart grafana
+   
+   c) Добавьте Data Source:
+      Connections → Data sources → Add data source → Zabbix
+      
+      URL: http://zabbix-frontend:8080/api_jsonrpc.php
+      Username: Admin
+      Password: zabbix
+      
+      Нажмите "Save & Test"
+   
+   d) Импортируйте dashboard:
+      Dashboards → New → Import
+      Dashboard ID: 12489 (Zabbix Server Dashboard)
+
+
+═══════════════════════════════════════════════════════════
+
+ПРОБЛЕМЫ И РЕШЕНИЯ:
+===================
+
+❌ Агент не подключается (красная иконка ZBX):
+
+   1. Проверьте логи агента:
+      docker logs zabbix-agent2
+   
+   2. Проверьте что интерфейс настроен правильно:
+      - DNS name: zabbix-agent2
+      - Connect to: DNS
+      - Port: 10050
+   
+   3. Перезапустите агента:
+      docker restart zabbix-agent2
+
+
+❌ Нет данных, но агент подключен:
+
+   1. Убедитесь что применен шаблон "Linux by Zabbix agent"
+   
+   2. Подождите 2-3 минуты для первого сбора данных
+   
+   3. Проверьте Items:
+      Data collection → Hosts → ubuntu25 → Items
+      Статус должен быть "Enabled"
+
+
+❌ "Permission denied" при попытке собрать метрики:
+
+   Перезапустите с правильными привилегиями:
+   ./restart.sh
+
+
+═══════════════════════════════════════════════════════════
+
+ПОЛЕЗНЫЕ КОМАНДЫ:
+=================
+
+Просмотр статуса всех сервисов:
+  ./status.sh
+
+Просмотр логов:
+  ./logs.sh agent    # логи агента
+  ./logs.sh server   # логи сервера
+  ./logs.sh all      # все логи
+
+Перезапуск:
+  ./restart.sh
+
+Остановка:
+  ./stop.sh
+
+Запуск:
+  ./start.sh
+
+
+═══════════════════════════════════════════════════════════
+
+ДОСТУПНЫЕ АДРЕСА:
+=================
+
+Zabbix Web UI:  http://localhost
+Grafana:        http://localhost:3000
+
+Пароли хранятся в файле docker-compose.yml
+
+
+═══════════════════════════════════════════════════════════
+

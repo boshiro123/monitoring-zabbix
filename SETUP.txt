@@ -1,0 +1,175 @@
+═══════════════════════════════════════════════════════════
+  БЫСТРАЯ НАСТРОЙКА ZABBIX ДЛЯ РАБОТЫ ГРАФИКОВ
+═══════════════════════════════════════════════════════════
+
+ЗАПУСК:
+-------
+./start.sh
+
+После запуска подождите 30-60 секунд для инициализации БД
+
+
+НАСТРОЙКА ZABBIX WEB UI:
+-------------------------
+
+1. Откройте http://localhost
+   Логин: Admin
+   Пароль: zabbix
+
+2. ОБЯЗАТЕЛЬНО смените пароль администратора:
+   Administration → Users → Admin → Change password
+
+3. Добавление/Настройка хоста для мониторинга:
+
+   a) Перейдите: Configuration → Hosts
+   
+   b) Если хост "ubuntu25" уже существует:
+      - Нажмите на него
+      - Проверьте Interfaces: должен быть Agent с портом 10050
+      - Убедитесь что Templates содержит: "Linux by Zabbix agent"
+      
+   c) Если хоста нет, создайте новый:
+      - Нажмите "Create host"
+      - Host name: ubuntu25 (или ваше имя из ZBX_HOSTNAME)
+      - Templates: выберите "Linux by Zabbix agent"
+      - Groups: добавьте в "Linux servers"
+      - Interfaces: 
+        * Type: Agent
+        * IP address: 127.0.0.1
+        * Port: 10050
+      - Нажмите "Add"
+
+4. ПРОВЕРКА СВЯЗИ С АГЕНТОМ:
+
+   Configuration → Hosts → Найдите ваш хост
+   
+   В колонке "Availability" должна быть зеленая иконка "ZBX"
+   Если красная - подождите 1-2 минуты
+   Если так и не стала зеленой:
+   - Проверьте логи: docker logs zabbix-agent2
+   - Проверьте что контейнер запущен: docker ps
+
+5. ПРОВЕРКА СБОРА ДАННЫХ:
+
+   Monitoring → Latest data
+   Выберите ваш хост (ubuntu25)
+   
+   Должны быть данные:
+   - CPU utilization
+   - Memory usage
+   - Disk space
+   - Network traffic
+   - System load
+   
+   Если данных нет - подождите 1-2 минуты
+
+6. ПРОСМОТР ГРАФИКОВ:
+
+   Monitoring → Hosts → Выберите хост → Graphs
+   
+   Или:
+   Monitoring → Latest data → Выберите хост → нажмите Graph рядом с метрикой
+
+
+НАСТРОЙКА GRAFANA:
+------------------
+
+1. Откройте http://localhost:3000
+   Логин: aDm1N
+   Пароль: r4FD6GEH7zsXfXZs
+
+2. Установите Zabbix плагин:
+   
+   Home → Administration → Plugins → найдите "Zabbix"
+   Если не установлен:
+   - docker exec -it grafana grafana-cli plugins install alexanderzobnin-zabbix-app
+   - docker restart grafana
+
+3. Добавьте Data Source:
+   
+   Home → Connections → Data sources → Add data source
+   Выберите "Zabbix"
+   
+   Настройки:
+   - URL: http://zabbix-server:10051
+   - Access: Server
+   - Zabbix API:
+     * URL: http://zabbix-frontend:8080/api_jsonrpc.php
+     * Username: Admin
+     * Password: zabbix (или ваш новый пароль)
+   
+   Нажмите "Save & Test"
+
+4. Импортируйте готовый dashboard:
+   
+   Home → Dashboards → New → Import
+   
+   ID дашбордов для Zabbix:
+   - 12489 (Zabbix Server Dashboard)
+   - 14767 (Zabbix Host Overview)
+   
+   Или создайте свой используя Zabbix data source
+
+
+УСТРАНЕНИЕ ПРОБЛЕМ:
+-------------------
+
+Агент не подключается (красный статус):
+  docker logs zabbix-agent2
+  docker logs zabbix-server
+  
+Нет данных в графиках:
+  - Подождите 2-3 минуты
+  - Проверьте что шаблон "Linux by Zabbix agent" применен
+  - Monitoring → Latest data → должны появиться метрики
+
+База данных не инициализируется:
+  docker-compose down
+  rm -rf db/*
+  docker-compose up -d
+  
+Grafana не видит Zabbix:
+  - Проверьте URL: http://zabbix-frontend:8080/api_jsonrpc.php
+  - Проверьте учетные данные Zabbix
+  - Убедитесь что плагин Zabbix установлен
+
+
+ВАЖНЫЕ ПОРТЫ:
+-------------
+80    - Zabbix Web UI
+3000  - Grafana
+10050 - Zabbix Agent
+10051 - Zabbix Server
+
+
+ОСТАНОВКА:
+----------
+./stop.sh
+
+Или:
+docker-compose down
+
+
+ДЛЯ РАЗВЕРТЫВАНИЯ НА LINUX СЕРВЕРЕ:
+------------------------------------
+
+1. Скопируйте всю папку на сервер:
+   scp -r monitoring/ user@server:/path/to/
+
+2. На сервере:
+   cd /path/to/monitoring
+   
+3. ВАЖНО: Измените ZBX_HOSTNAME в файле:
+   - docker-compose.yml (переменная ZBX_HOSTNAME)
+   - zabbix_agent2.conf (параметр Hostname)
+   
+   Поставьте реальное имя вашего сервера
+
+4. Запустите:
+   ./start.sh
+
+5. Откройте в браузере:
+   http://YOUR_SERVER_IP
+
+═══════════════════════════════════════════════════════════
+

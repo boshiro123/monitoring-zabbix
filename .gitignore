@@ -1,0 +1,23 @@
+# Данные баз данных
+db/
+
+# Данные Grafana
+grafana/
+
+# Логи и конфигурации Zabbix
+zbx_env/
+
+# Environment файлы с паролями
+.env
+
+# Системные файлы MacOS
+.DS_Store
+
+# Логи
+*.log
+
+# Временные файлы
+*.tmp
+*.swp
+*~
+
