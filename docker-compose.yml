@@ -55,7 +55,7 @@ services:
     depends_on:
       - zabbix-server
     ports:
-      - "3001:3001"
+      - "3001:8080"
     networks:
       - zbxnet
 

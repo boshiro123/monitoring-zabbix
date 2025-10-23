@@ -10,9 +10,9 @@ echo "=========================================="
 echo ""
 
 if command -v docker-compose &> /dev/null; then
-    docker-compose down
+    docker-compose stop
 else
-    docker compose down
+    docker compose stop
 fi
 
 echo ""
