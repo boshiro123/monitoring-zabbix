@@ -55,8 +55,7 @@ services:
     depends_on:
       - zabbix-server
     ports:
-      - "80:8080"
-      - "443:8443"
+      - "3001:3001"
     networks:
       - zbxnet
 
@@ -85,21 +84,21 @@ services:
       zabbix-server:
         condition: service_healthy
 
-  grafana:
-    image: grafana/grafana:11.2.0
-    container_name: grafana
-    restart: unless-stopped
-    depends_on:
-      - zabbix-server
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-aDm1N}
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-r4FD6GEH7zsXfXZs}
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./grafana:/var/lib/grafana
-    networks:
-      - zbxnet
+  # grafana:
+  #   image: grafana/grafana:11.2.0
+  #   container_name: grafana
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - zabbix-server
+  #   environment:
+  #     - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-aDm1N}
+  #     - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-r4FD6GEH7zsXfXZs}
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./grafana:/var/lib/grafana
+  #   networks:
+  #     - zbxnet
 
 networks:
   zbxnet:
